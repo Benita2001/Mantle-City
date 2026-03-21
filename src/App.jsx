@@ -75,8 +75,8 @@ export default function App() {
           target={[54, 0, 66]}
           minPolarAngle={0}
           maxPolarAngle={Math.PI / 2 - 0.05}
-          minDistance={5}
-          maxDistance={500}
+          minDistance={10}
+          maxDistance={150}
           enableDamping={false}
         />
       </Canvas>
