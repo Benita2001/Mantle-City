@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import Building    from './Building.jsx'
@@ -15,11 +16,11 @@ const SIDEWALK = 0.6   // pavement strip between road edge and building block
 const CELL_W  = BLOCK_W + STREET   // 12
 const CELL_D  = BLOCK_D + STREET   // 12
 
-// ── Building facade tones (daytime grey-blue steel) ───────────────────────────
-const FACADE_COLORS = ['#8A9BAE', '#9AAABA', '#7A8B9A']
+// ── Building facade tones ──────────────────────────────────────────────────────
+const FACADE_COLORS = ['#1C1C1E', '#242428', '#2C2C30']
 
 // ── Tree & car palette ─────────────────────────────────────────────────────────
-const TREE_COLORS = ['#2D7A2D', '#4A9A2A', '#3A8A3A', '#C05020', '#D09020']
+const TREE_COLORS = ['#1A4A1A', '#1E5A1E', '#153515', '#1A4020', '#0F3A0F']
 const CAR_COLORS  = ['#3060A0', '#A03030', '#F0C020', '#404048', '#208040', '#8040A0']
 
 // ── PRNG (mulberry32) ──────────────────────────────────────────────────────────
@@ -143,7 +144,7 @@ function makeNSRoadTex(gridD) {
   const c = document.createElement('canvas')
   c.width = W; c.height = H
   const ctx = c.getContext('2d')
-  ctx.fillStyle = '#A8A8A8'
+  ctx.fillStyle = '#2a2a2a'
   ctx.fillRect(0, 0, W, H)
   // centre dashed divider only — no solid edge lines
   ctx.fillStyle = 'rgba(255,255,255,0.75)'
@@ -160,7 +161,7 @@ function makeEWRoadTex(gridW) {
   const c = document.createElement('canvas')
   c.width = W; c.height = H
   const ctx = c.getContext('2d')
-  ctx.fillStyle = '#A8A8A8'
+  ctx.fillStyle = '#2a2a2a'
   ctx.fillRect(0, 0, W, H)
   // centre dashed divider only — no solid edge lines
   ctx.fillStyle = 'rgba(255,255,255,0.75)'
@@ -177,7 +178,7 @@ function makeCrosswalkTex(ewApproach) {
   const c = document.createElement('canvas')
   c.width = W; c.height = H
   const ctx = c.getContext('2d')
-  ctx.fillStyle = '#A8A8A8'
+  ctx.fillStyle = '#2a2a2a'
   ctx.fillRect(0, 0, W, H)
   ctx.fillStyle = 'rgba(255,255,255,0.82)'
   const n = 5, stripe = 12, gap = 20
@@ -212,20 +213,71 @@ function Tree({ position, colorIdx = 0 }) {
   )
 }
 
-// ── Car ───────────────────────────────────────────────────────────────────────
-function Car({ position, rotY = 0, colorIdx = 0 }) {
-  const color = CAR_COLORS[colorIdx % CAR_COLORS.length]
+// ── AnimatedCars — loop along roads every frame ───────────────────────────────
+function AnimatedCars({ nsX, ewZ, gridW, gridD }) {
+  const carData = useMemo(() => {
+    const rnd = mulberry32(0xCAFE)
+    const out = []
+    nsX.forEach(x => {
+      for (let n = 0; n < 3; n++) {
+        const lane  = rnd() > 0.5 ? -0.72 : 0.72
+        const speed = (5 + rnd() * 8) * (rnd() > 0.5 ? 1 : -1)
+        out.push({ type: 'ns', x: x + lane, z: rnd() * gridD,
+          speed, colorIdx: Math.floor(rnd() * CAR_COLORS.length),
+          rotY: speed > 0 ? 0 : Math.PI })
+      }
+    })
+    ewZ.forEach(z => {
+      for (let n = 0; n < 3; n++) {
+        const lane  = rnd() > 0.5 ? -0.72 : 0.72
+        const speed = (5 + rnd() * 8) * (rnd() > 0.5 ? 1 : -1)
+        out.push({ type: 'ew', x: rnd() * gridW, z: z + lane,
+          speed, colorIdx: Math.floor(rnd() * CAR_COLORS.length),
+          rotY: speed > 0 ? -Math.PI / 2 : Math.PI / 2 })
+      }
+    })
+    return out
+  }, [nsX, ewZ, gridW, gridD])
+
+  const groupRefs = useRef([])
+  const pos = useRef(carData.map(c => ({ x: c.x, z: c.z })))
+
+  useFrame((_, dt) => {
+    carData.forEach((car, i) => {
+      const p = pos.current[i]
+      if (car.type === 'ns') {
+        p.z += car.speed * dt
+        if (p.z > gridD) p.z -= gridD
+        if (p.z < 0)     p.z += gridD
+      } else {
+        p.x += car.speed * dt
+        if (p.x > gridW) p.x -= gridW
+        if (p.x < 0)     p.x += gridW
+      }
+      const g = groupRefs.current[i]
+      if (g) { g.position.x = p.x; g.position.z = p.z }
+    })
+  })
+
   return (
-    <group position={position} rotation={[0, rotY, 0]}>
-      <mesh castShadow>
-        <boxGeometry args={[0.9, 0.35, 1.8]} />
-        <meshStandardMaterial color={color} roughness={0.4} metalness={0.4} />
-      </mesh>
-      <mesh position={[0, 0.33, 0.1]} castShadow>
-        <boxGeometry args={[0.72, 0.3, 0.95]} />
-        <meshStandardMaterial color={color} roughness={0.3} metalness={0.3} />
-      </mesh>
-    </group>
+    <>
+      {carData.map((car, i) => {
+        const color = CAR_COLORS[car.colorIdx % CAR_COLORS.length]
+        return (
+          <group key={i} ref={el => groupRefs.current[i] = el}
+                 position={[car.x, 0.175, car.z]} rotation={[0, car.rotY, 0]}>
+            <mesh castShadow>
+              <boxGeometry args={[0.9, 0.35, 1.8]} />
+              <meshStandardMaterial color={color} roughness={0.4} metalness={0.4} />
+            </mesh>
+            <mesh position={[0, 0.33, 0.1]} castShadow>
+              <boxGeometry args={[0.72, 0.3, 0.95]} />
+              <meshStandardMaterial color={color} roughness={0.3} metalness={0.3} />
+            </mesh>
+          </group>
+        )
+      })}
+    </>
   )
 }
 
@@ -302,26 +354,6 @@ export default function CityGrid({ wallets = null }) {
     return out
   }, [nsX, ewZ])
 
-  // Car positions: seeded along each road segment
-  const carPositions = useMemo(() => {
-    const rnd = mulberry32(0xCAFE)
-    const out = []
-    nsX.forEach(x => {
-      for (let n = 0; n < 3; n++) {
-        const lane = rnd() > 0.5 ? -0.72 : 0.72
-        out.push({ x: x + lane, y: 0.175, z: 1 + rnd() * (gridD - 2),
-          rotY: rnd() > 0.5 ? 0 : Math.PI, colorIdx: Math.floor(rnd() * CAR_COLORS.length) })
-      }
-    })
-    ewZ.forEach(z => {
-      for (let n = 0; n < 3; n++) {
-        const lane = rnd() > 0.5 ? -0.72 : 0.72
-        out.push({ x: 1 + rnd() * (gridW - 2), y: 0.175, z: z + lane,
-          rotY: rnd() > 0.5 ? Math.PI / 2 : -Math.PI / 2, colorIdx: Math.floor(rnd() * CAR_COLORS.length) })
-      }
-    })
-    return out
-  }, [nsX, ewZ, gridW, gridD])
 
   return (
     <group>
@@ -331,7 +363,7 @@ export default function CityGrid({ wallets = null }) {
             position={[gridW / 2, 0, gridD / 2]}
             receiveShadow>
         <planeGeometry args={[500, 500]} />
-        <meshStandardMaterial color="#C0BCB0" roughness={0.95} metalness={0} />
+        <meshStandardMaterial color="#1a1a1a" roughness={0.95} metalness={0} />
       </mesh>
 
       {/* ── Sidewalks: narrow pavement strip on each side of every road ────── */}
@@ -339,24 +371,24 @@ export default function CityGrid({ wallets = null }) {
         <mesh key={`sw-nsl-${i}`} rotation={[-Math.PI / 2, 0, 0]}
               position={[x - STREET / 2 - SIDEWALK / 2, 0.003, gridD / 2]} receiveShadow>
           <planeGeometry args={[SIDEWALK, gridD]} />
-          <meshStandardMaterial color="#B8B4A8" roughness={0.95} metalness={0} />
+          <meshStandardMaterial color="#3a3a3a" roughness={0.95} metalness={0} />
         </mesh>,
         <mesh key={`sw-nsr-${i}`} rotation={[-Math.PI / 2, 0, 0]}
               position={[x + STREET / 2 + SIDEWALK / 2, 0.003, gridD / 2]} receiveShadow>
           <planeGeometry args={[SIDEWALK, gridD]} />
-          <meshStandardMaterial color="#B8B4A8" roughness={0.95} metalness={0} />
+          <meshStandardMaterial color="#3a3a3a" roughness={0.95} metalness={0} />
         </mesh>,
       ])}
       {ewZ.flatMap((z, j) => [
         <mesh key={`sw-ewt-${j}`} rotation={[-Math.PI / 2, 0, 0]}
               position={[gridW / 2, 0.003, z - STREET / 2 - SIDEWALK / 2]} receiveShadow>
           <planeGeometry args={[gridW, SIDEWALK]} />
-          <meshStandardMaterial color="#B8B4A8" roughness={0.95} metalness={0} />
+          <meshStandardMaterial color="#3a3a3a" roughness={0.95} metalness={0} />
         </mesh>,
         <mesh key={`sw-ewb-${j}`} rotation={[-Math.PI / 2, 0, 0]}
               position={[gridW / 2, 0.003, z + STREET / 2 + SIDEWALK / 2]} receiveShadow>
           <planeGeometry args={[gridW, SIDEWALK]} />
-          <meshStandardMaterial color="#B8B4A8" roughness={0.95} metalness={0} />
+          <meshStandardMaterial color="#3a3a3a" roughness={0.95} metalness={0} />
         </mesh>,
       ])}
 
@@ -367,7 +399,7 @@ export default function CityGrid({ wallets = null }) {
               position={[x, 0.005, gridD / 2]}
               receiveShadow>
           <planeGeometry args={[STREET, gridD]} />
-          <meshStandardMaterial map={tex.nsRoad} color="#A8A8A8" roughness={0.9} metalness={0} />
+          <meshStandardMaterial map={tex.nsRoad} color="#2a2a2a" roughness={0.9} metalness={0} />
         </mesh>
       ))}
 
@@ -378,7 +410,7 @@ export default function CityGrid({ wallets = null }) {
               position={[gridW / 2, 0.006, z]}
               receiveShadow>
           <planeGeometry args={[gridW, STREET]} />
-          <meshStandardMaterial map={tex.ewRoad} color="#A8A8A8" roughness={0.9} metalness={0} />
+          <meshStandardMaterial map={tex.ewRoad} color="#2a2a2a" roughness={0.9} metalness={0} />
         </mesh>
       ))}
 
@@ -390,7 +422,7 @@ export default function CityGrid({ wallets = null }) {
                 position={[x, 0.007, z]}
                 receiveShadow>
             <planeGeometry args={[STREET, STREET]} />
-            <meshStandardMaterial color="#A8A8A8" roughness={0.9} metalness={0} />
+            <meshStandardMaterial color="#2a2a2a" roughness={0.9} metalness={0} />
           </mesh>
         ))
       )}
@@ -452,10 +484,8 @@ export default function CityGrid({ wallets = null }) {
         <Tree key={`tree-${i}`} position={[t.x, 0, t.z]} colorIdx={t.colorIdx} />
       ))}
 
-      {/* ── Cars on road segments ─────────────────────────────────────────── */}
-      {carPositions.map((c, i) => (
-        <Car key={`car-${i}`} position={[c.x, c.y, c.z]} rotY={c.rotY} colorIdx={c.colorIdx} />
-      ))}
+      {/* ── Animated cars looping along roads ────────────────────────────── */}
+      <AnimatedCars nsX={nsX} ewZ={ewZ} gridW={gridW} gridD={gridD} />
 
     </group>
   )
