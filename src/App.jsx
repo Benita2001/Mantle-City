@@ -1,5 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
+import * as THREE from 'three'
 import CityGrid from './CityGrid.jsx'
 import Sky      from './Sky.jsx'
 import { useDuneData } from './hooks/useDuneData.js'
@@ -45,7 +46,7 @@ export default function App() {
 
       <Canvas
         camera={{ position: [54, 70, 160], fov: 50 }}
-        onCreated={({ camera }) => camera.lookAt(54, 0, 66)}
+        onCreated={({ camera, scene }) => { camera.lookAt(54, 0, 66); scene.background = new THREE.Color('#050D20') }}
         gl={{ antialias: true, toneMapping: 4 /* ACESFilmic */ }}
         shadows
       >

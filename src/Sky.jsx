@@ -71,23 +71,6 @@ const STAR_FRAG = /* glsl */`
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function Sky() {
 
-  // Sky dome gradient texture: near-black zenith → deep navy at horizon
-  const skyTex = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 4; canvas.height = 256
-    const ctx = canvas.getContext('2d')
-    const g   = ctx.createLinearGradient(0, 0, 0, 256)
-    g.addColorStop(0,    '#000008')   // zenith  — near black
-    g.addColorStop(0.45, '#010810')   // upper mid
-    g.addColorStop(0.55, '#050D20')   // horizon — deep navy
-    g.addColorStop(1,    '#050D20')   // below horizon (covered by fog)
-    ctx.fillStyle = g
-    ctx.fillRect(0, 0, 4, 256)
-    const t = new THREE.CanvasTexture(canvas)
-    t.colorSpace = THREE.SRGBColorSpace
-    return t
-  }, [])
-
   const starGeo = useMemo(buildStarGeometry, [])
 
   const starMat = useMemo(() => new THREE.ShaderMaterial({
@@ -107,12 +90,6 @@ export default function Sky() {
     <>
       {/* Dark navy fog — matches horizon, zero teal */}
       <fogExp2 attach="fog" args={['#050D20', 0.008]} />
-
-      {/* Sky dome — BackSide so it wraps the inside of the scene */}
-      <mesh renderOrder={-2}>
-        <sphereGeometry args={[2000, 32, 16]} />
-        <meshBasicMaterial map={skyTex} side={THREE.BackSide} depthWrite={false} />
-      </mesh>
 
       {/* 2000 twinkling star points */}
       <points renderOrder={-1} geometry={starGeo} material={starMat} />
