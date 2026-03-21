@@ -4,6 +4,7 @@ import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import Building    from './Building.jsx'
 import StreetLight from './StreetLight.jsx'
+import CityFlag    from './CityFlag.jsx'
 import { getProtocolInfo, classifyWallet, WALLET_COLORS } from './utils/walletClassifier.js'
 
 // ── Grid constants ─────────────────────────────────────────────────────────────
@@ -486,6 +487,14 @@ export default function CityGrid({ wallets = null }) {
 
       {/* ── Animated cars looping along roads ────────────────────────────── */}
       <AnimatedCars nsX={nsX} ewZ={ewZ} gridW={gridW} gridD={gridD} />
+
+      {/* ── Waving flag on tallest building (always buildings[0]) ─────────── */}
+      {buildings[0] && (
+        <CityFlag
+          position={[buildings[0].x, 0, buildings[0].z]}
+          buildingHeight={buildings[0].height}
+        />
+      )}
 
     </group>
   )
