@@ -3,12 +3,12 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 // ── Mantle brand palette ──────────────────────────────────────────────────────
-const FACADE    = '#1C1C1E'   // dark concrete base
-const LIT_TEAL  = '#65B3AE'   // primary lit window  (30%)
-const LIT_GREEN = '#008F6A'   // secondary lit window (15%)
-const WIN_DARK  = '#0d1117'   // unlit window         (55%)
-const FLOOR_LINE = '#2a2a35'  // horizontal floor dividers
-const MULLION    = '#161618'  // vertical mullions
+const FACADE    = '#8A9BAE'   // daytime concrete base
+const LIT_TEAL  = '#C8D8E8'   // sky-reflected glass   (30%)
+const LIT_GREEN = '#E8D8A0'   // warm interior light   (15%)
+const WIN_DARK  = '#3A4050'   // dark tinted glass     (55%)
+const FLOOR_LINE = '#B0AAAA'  // horizontal floor dividers
+const MULLION    = '#909090'  // vertical mullions
 
 const COLS = 8
 const ROWS = 24
@@ -148,13 +148,13 @@ export default function Building({
       map:               tex,
       emissiveMap:       tex,
       emissive:          new THREE.Color('#ffffff'), // white: lets texture color control glow directly
-      emissiveIntensity: 0.5,                        // dark pixels → ~0, teal windows → teal glow
+      emissiveIntensity: 0.08,                       // subtle day glow — windows show colour, no bloom
       roughness:         0.8,
       metalness:         0.0,
     })
 
     const roof = new THREE.MeshStandardMaterial({
-      color:     new THREE.Color('#1a1a1e'),
+      color:     new THREE.Color('#E0DCD0'),
       roughness: 0.85,
       metalness: 0.15,
     })

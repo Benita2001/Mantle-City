@@ -15,8 +15,12 @@ const SIDEWALK = 0.6   // pavement strip between road edge and building block
 const CELL_W  = BLOCK_W + STREET   // 12
 const CELL_D  = BLOCK_D + STREET   // 12
 
-// ── Building facade tones ──────────────────────────────────────────────────────
-const FACADE_COLORS = ['#1C1C1E', '#242428', '#2C2C30']
+// ── Building facade tones (daytime grey-blue steel) ───────────────────────────
+const FACADE_COLORS = ['#8A9BAE', '#9AAABA', '#7A8B9A']
+
+// ── Tree & car palette ─────────────────────────────────────────────────────────
+const TREE_COLORS = ['#2D7A2D', '#4A9A2A', '#3A8A3A', '#C05020', '#D09020']
+const CAR_COLORS  = ['#3060A0', '#A03030', '#F0C020', '#404048', '#208040', '#8040A0']
 
 // ── PRNG (mulberry32) ──────────────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -55,71 +59,81 @@ function computeGrid(n) {
   return { cols, rows, gridW, gridD, nsX, ewZ }
 }
 
-// ── Normalize live Dune rows into building data ────────────────────────────────
-function normalizeWallets(rows, cols, rows_count) {
-  const maxTx  = Math.max(...rows.map(r => r.tx_count || 0), 1)
-  const maxVol = Math.max(...rows.map(r => r.total_volume_mnt || 0), 0)
+// ── Normalize live Dune rows into building data (tallest → center) ────────────
+function normalizeWallets(rows, cols, rowCount) {
+  const maxTx = Math.max(...rows.map(r => r.tx_count || 0), 1)
 
-  return rows.map((row, idx) => {
+  // Build normalized objects, sort tallest first
+  const normed = rows.map(row => {
     const addr    = (row.wallet_address || '').toLowerCase()
     const proto   = getProtocolInfo(addr)
     const type    = classifyWallet(row)
     const txNorm  = (row.tx_count || 0) / maxTx
-    const volNorm = maxVol > 0.001 ? (row.total_volume_mnt || 0) / maxVol : txNorm
-
     const isProto = type === 'protocol'
-    const height  = isProto ? 40 : 8  + txNorm  * 32
-    const size    = isProto ? 8  : 3  + txNorm  * 5
+    const height  = isProto ? 40 : 8 + txNorm * 32
+    const size    = isProto ? 8  : 3 + txNorm * 5
     const litPct  = isProto ? 0.9 : 0.1 + txNorm * 0.7
     const seed    = hashAddress(addr)
     const rnd     = mulberry32(seed)
     const facadeColor = isProto
       ? FACADE_COLORS[0]
       : FACADE_COLORS[Math.floor(rnd() * FACADE_COLORS.length)]
+    return { row, addr, proto, type, height, size, litPct, seed, facadeColor }
+  }).sort((a, b) => b.height - a.height)
 
-    const c = idx % cols
-    const r = Math.floor(idx / cols)
+  // Grid positions sorted closest-to-center first
+  const centerC = (cols - 1) / 2
+  const centerR = (rowCount - 1) / 2
+  const positions = []
+  for (let r = 0; r < rowCount; r++)
+    for (let c = 0; c < cols; c++)
+      positions.push({ c, r, dist: Math.hypot(c - centerC, r - centerR) })
+  positions.sort((a, b) => a.dist - b.dist)
 
+  return normed.map((n, idx) => {
+    const { c, r } = positions[Math.min(idx, positions.length - 1)]
     return {
-      id:          addr || `b_${idx}`,
-      seed,
-      width:       size,
-      depth:       size,
-      height,
-      facadeColor,
-      litPct,
+      id:          n.addr || `b_${idx}`,
+      seed:        n.seed,
+      width:       n.size,
+      depth:       n.size,
+      height:      n.height,
+      facadeColor: n.facadeColor,
+      litPct:      n.litPct,
       x:           c * CELL_W + BLOCK_W / 2,
       z:           r * CELL_D + BLOCK_D / 2,
-      label:       proto ? proto.name    : null,
-      subtitle:    proto ? proto.subtitle : null,
-      type,
-      address:     row.wallet_address,
+      label:       n.proto ? n.proto.name    : null,
+      subtitle:    n.proto ? n.proto.subtitle : null,
+      type:        n.type,
+      address:     n.row.wallet_address,
     }
   })
 }
 
-// ── Placeholder building data (used when no live data) ────────────────────────
+// ── Placeholder building data (tallest → center) ──────────────────────────────
 function genPlaceholderData(cols, rows) {
   const out = []
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const seed = (c * 97 + r * 31 + 3) * 19
       const rnd  = mulberry32(seed)
-      out.push({
-        id:          `b_${c}_${r}`,
-        seed,
-        width:       3 + rnd() * 5,
-        depth:       3 + rnd() * 5,
-        height:      8 + rnd() * 32,
-        facadeColor: FACADE_COLORS[Math.floor(rnd() * 3)],
-        litPct:      0.35,
-        x:           c * CELL_W + BLOCK_W / 2,
-        z:           r * CELL_D + BLOCK_D / 2,
-        label:       null,
-      })
+      out.push({ id: `b_${c}_${r}`, seed, width: 3 + rnd() * 5, depth: 3 + rnd() * 5,
+        height: 8 + rnd() * 32, facadeColor: FACADE_COLORS[Math.floor(rnd() * 3)],
+        litPct: 0.35, label: null })
     }
   }
-  return out
+  out.sort((a, b) => b.height - a.height)
+  const centerC = (cols - 1) / 2
+  const centerR = (rows - 1) / 2
+  const positions = []
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      positions.push({ c, r, dist: Math.hypot(c - centerC, r - centerR) })
+  positions.sort((a, b) => a.dist - b.dist)
+  return out.map((b, idx) => {
+    const { c, r } = positions[idx]
+    return { ...b, x: c * CELL_W + BLOCK_W / 2, z: r * CELL_D + BLOCK_D / 2 }
+  })
 }
 
 // ── Texture factories ──────────────────────────────────────────────────────────
@@ -129,7 +143,7 @@ function makeNSRoadTex(gridD) {
   const c = document.createElement('canvas')
   c.width = W; c.height = H
   const ctx = c.getContext('2d')
-  ctx.fillStyle = '#2a2a2a'
+  ctx.fillStyle = '#A8A8A8'
   ctx.fillRect(0, 0, W, H)
   // centre dashed divider only — no solid edge lines
   ctx.fillStyle = 'rgba(255,255,255,0.75)'
@@ -146,7 +160,7 @@ function makeEWRoadTex(gridW) {
   const c = document.createElement('canvas')
   c.width = W; c.height = H
   const ctx = c.getContext('2d')
-  ctx.fillStyle = '#2a2a2a'
+  ctx.fillStyle = '#A8A8A8'
   ctx.fillRect(0, 0, W, H)
   // centre dashed divider only — no solid edge lines
   ctx.fillStyle = 'rgba(255,255,255,0.75)'
@@ -163,7 +177,7 @@ function makeCrosswalkTex(ewApproach) {
   const c = document.createElement('canvas')
   c.width = W; c.height = H
   const ctx = c.getContext('2d')
-  ctx.fillStyle = '#2a2a2a'
+  ctx.fillStyle = '#A8A8A8'
   ctx.fillRect(0, 0, W, H)
   ctx.fillStyle = 'rgba(255,255,255,0.82)'
   const n = 5, stripe = 12, gap = 20
@@ -179,6 +193,40 @@ function makeCrosswalkTex(ewApproach) {
   const t = new THREE.CanvasTexture(c)
   t.colorSpace = THREE.SRGBColorSpace
   return t
+}
+
+// ── Tree ──────────────────────────────────────────────────────────────────────
+function Tree({ position, colorIdx = 0 }) {
+  const color = TREE_COLORS[colorIdx % TREE_COLORS.length]
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.65, 0]} castShadow>
+        <cylinderGeometry args={[0.1, 0.18, 1.3, 6]} />
+        <meshStandardMaterial color="#5C4033" roughness={0.9} metalness={0} />
+      </mesh>
+      <mesh position={[0, 2.1, 0]} castShadow>
+        <coneGeometry args={[0.7, 2.0, 7]} />
+        <meshStandardMaterial color={color} roughness={0.8} metalness={0} />
+      </mesh>
+    </group>
+  )
+}
+
+// ── Car ───────────────────────────────────────────────────────────────────────
+function Car({ position, rotY = 0, colorIdx = 0 }) {
+  const color = CAR_COLORS[colorIdx % CAR_COLORS.length]
+  return (
+    <group position={position} rotation={[0, rotY, 0]}>
+      <mesh castShadow>
+        <boxGeometry args={[0.9, 0.35, 1.8]} />
+        <meshStandardMaterial color={color} roughness={0.4} metalness={0.4} />
+      </mesh>
+      <mesh position={[0, 0.33, 0.1]} castShadow>
+        <boxGeometry args={[0.72, 0.3, 0.95]} />
+        <meshStandardMaterial color={color} roughness={0.3} metalness={0.3} />
+      </mesh>
+    </group>
+  )
 }
 
 // ── Landmark label (floating above protocol buildings) ────────────────────────
@@ -235,6 +283,46 @@ export default function CityGrid({ wallets = null }) {
     [nsX, ewZ]
   )
 
+  // Tree positions: seeded random corners at each intersection
+  const treePositions = useMemo(() => {
+    const rnd = mulberry32(0xDEAD)
+    const out = []
+    nsX.forEach(x => ewZ.forEach(z => {
+      const corners = [
+        [x - STREET / 2 - 1.2, z - STREET / 2 - 1.2],
+        [x + STREET / 2 + 1.2, z - STREET / 2 - 1.2],
+        [x - STREET / 2 - 1.2, z + STREET / 2 + 1.2],
+        [x + STREET / 2 + 1.2, z + STREET / 2 + 1.2],
+      ]
+      corners.forEach(([tx, tz]) => {
+        if (rnd() > 0.35)
+          out.push({ x: tx, z: tz, colorIdx: Math.floor(rnd() * TREE_COLORS.length) })
+      })
+    }))
+    return out
+  }, [nsX, ewZ])
+
+  // Car positions: seeded along each road segment
+  const carPositions = useMemo(() => {
+    const rnd = mulberry32(0xCAFE)
+    const out = []
+    nsX.forEach(x => {
+      for (let n = 0; n < 3; n++) {
+        const lane = rnd() > 0.5 ? -0.72 : 0.72
+        out.push({ x: x + lane, y: 0.175, z: 1 + rnd() * (gridD - 2),
+          rotY: rnd() > 0.5 ? 0 : Math.PI, colorIdx: Math.floor(rnd() * CAR_COLORS.length) })
+      }
+    })
+    ewZ.forEach(z => {
+      for (let n = 0; n < 3; n++) {
+        const lane = rnd() > 0.5 ? -0.72 : 0.72
+        out.push({ x: 1 + rnd() * (gridW - 2), y: 0.175, z: z + lane,
+          rotY: rnd() > 0.5 ? Math.PI / 2 : -Math.PI / 2, colorIdx: Math.floor(rnd() * CAR_COLORS.length) })
+      }
+    })
+    return out
+  }, [nsX, ewZ, gridW, gridD])
+
   return (
     <group>
 
@@ -243,7 +331,7 @@ export default function CityGrid({ wallets = null }) {
             position={[gridW / 2, 0, gridD / 2]}
             receiveShadow>
         <planeGeometry args={[500, 500]} />
-        <meshStandardMaterial color="#1e1e1e" roughness={0.95} metalness={0} />
+        <meshStandardMaterial color="#C0BCB0" roughness={0.95} metalness={0} />
       </mesh>
 
       {/* ── Sidewalks: narrow pavement strip on each side of every road ────── */}
@@ -251,24 +339,24 @@ export default function CityGrid({ wallets = null }) {
         <mesh key={`sw-nsl-${i}`} rotation={[-Math.PI / 2, 0, 0]}
               position={[x - STREET / 2 - SIDEWALK / 2, 0.003, gridD / 2]} receiveShadow>
           <planeGeometry args={[SIDEWALK, gridD]} />
-          <meshStandardMaterial color="#3a3a3a" roughness={0.95} metalness={0} />
+          <meshStandardMaterial color="#B8B4A8" roughness={0.95} metalness={0} />
         </mesh>,
         <mesh key={`sw-nsr-${i}`} rotation={[-Math.PI / 2, 0, 0]}
               position={[x + STREET / 2 + SIDEWALK / 2, 0.003, gridD / 2]} receiveShadow>
           <planeGeometry args={[SIDEWALK, gridD]} />
-          <meshStandardMaterial color="#3a3a3a" roughness={0.95} metalness={0} />
+          <meshStandardMaterial color="#B8B4A8" roughness={0.95} metalness={0} />
         </mesh>,
       ])}
       {ewZ.flatMap((z, j) => [
         <mesh key={`sw-ewt-${j}`} rotation={[-Math.PI / 2, 0, 0]}
               position={[gridW / 2, 0.003, z - STREET / 2 - SIDEWALK / 2]} receiveShadow>
           <planeGeometry args={[gridW, SIDEWALK]} />
-          <meshStandardMaterial color="#3a3a3a" roughness={0.95} metalness={0} />
+          <meshStandardMaterial color="#B8B4A8" roughness={0.95} metalness={0} />
         </mesh>,
         <mesh key={`sw-ewb-${j}`} rotation={[-Math.PI / 2, 0, 0]}
               position={[gridW / 2, 0.003, z + STREET / 2 + SIDEWALK / 2]} receiveShadow>
           <planeGeometry args={[gridW, SIDEWALK]} />
-          <meshStandardMaterial color="#3a3a3a" roughness={0.95} metalness={0} />
+          <meshStandardMaterial color="#B8B4A8" roughness={0.95} metalness={0} />
         </mesh>,
       ])}
 
@@ -279,7 +367,7 @@ export default function CityGrid({ wallets = null }) {
               position={[x, 0.005, gridD / 2]}
               receiveShadow>
           <planeGeometry args={[STREET, gridD]} />
-          <meshStandardMaterial map={tex.nsRoad} color="#2a2a2a" roughness={0.9} metalness={0} />
+          <meshStandardMaterial map={tex.nsRoad} color="#A8A8A8" roughness={0.9} metalness={0} />
         </mesh>
       ))}
 
@@ -290,7 +378,7 @@ export default function CityGrid({ wallets = null }) {
               position={[gridW / 2, 0.006, z]}
               receiveShadow>
           <planeGeometry args={[gridW, STREET]} />
-          <meshStandardMaterial map={tex.ewRoad} color="#2a2a2a" roughness={0.9} metalness={0} />
+          <meshStandardMaterial map={tex.ewRoad} color="#A8A8A8" roughness={0.9} metalness={0} />
         </mesh>
       ))}
 
@@ -302,7 +390,7 @@ export default function CityGrid({ wallets = null }) {
                 position={[x, 0.007, z]}
                 receiveShadow>
             <planeGeometry args={[STREET, STREET]} />
-            <meshStandardMaterial color="#2a2a2a" roughness={0.9} metalness={0} />
+            <meshStandardMaterial color="#A8A8A8" roughness={0.9} metalness={0} />
           </mesh>
         ))
       )}
@@ -357,6 +445,16 @@ export default function CityGrid({ wallets = null }) {
       {/* ── Street lights at all intersections (NW corner each) ─────────── */}
       {lightPositions.map((pos, i) => (
         <StreetLight key={`sl-${i}`} position={pos} />
+      ))}
+
+      {/* ── Trees at intersection corners ────────────────────────────────── */}
+      {treePositions.map((t, i) => (
+        <Tree key={`tree-${i}`} position={[t.x, 0, t.z]} colorIdx={t.colorIdx} />
+      ))}
+
+      {/* ── Cars on road segments ─────────────────────────────────────────── */}
+      {carPositions.map((c, i) => (
+        <Car key={`car-${i}`} position={[c.x, c.y, c.z]} rotY={c.rotY} colorIdx={c.colorIdx} />
       ))}
 
     </group>

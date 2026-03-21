@@ -13,7 +13,7 @@ export default function App() {
   const { wallets, loading } = useDuneData()
 
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000008' }}>
+    <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#C9E8F8' }}>
       <style>{spinnerStyle}</style>
 
       {loading && (
@@ -46,17 +46,17 @@ export default function App() {
 
       <Canvas
         camera={{ position: [54, 70, 160], fov: 50 }}
-        onCreated={({ camera, scene }) => { camera.lookAt(54, 0, 66); scene.background = new THREE.Color('#050D20') }}
+        onCreated={({ camera, scene }) => { camera.lookAt(54, 0, 66); scene.background = new THREE.Color('#C9E8F8') }}
         gl={{ antialias: true, toneMapping: 4 /* ACESFilmic */ }}
         shadows
       >
-        <ambientLight intensity={0.5} color="#ffffff" />
-        {/* Replaces the 80 per-lamp point lights — single teal fill across the whole scene */}
-        <hemisphereLight args={['#65B3AE', '#0d1117', 0.18]} />
+        <ambientLight intensity={1.2} color="#ffffff" />
+        {/* Daytime sky/ground fill */}
+        <hemisphereLight args={['#87CEEB', '#C0BCB0', 0.6]} />
         <directionalLight
-          position={[30, 60, 40]}
-          intensity={0.8}
-          color="#d0e0ff"
+          position={[80, 120, 60]}
+          intensity={2.0}
+          color="#FFF8E8"
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-camera-near={1}
