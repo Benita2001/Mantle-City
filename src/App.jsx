@@ -2,8 +2,10 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import { useState } from 'react'
-import CityGrid from './CityGrid.jsx'
-import Sky      from './Sky.jsx'
+import CityGrid  from './CityGrid.jsx'
+import Sky       from './Sky.jsx'
+import Birds     from './Birds.jsx'
+import Airplane  from './Airplane.jsx'
 import { useDuneData } from './hooks/useDuneData.js'
 import { formatAddress, formatVolume } from './utils/walletClassifier.js'
 
@@ -54,7 +56,7 @@ export default function App() {
         shadows
         onPointerMissed={() => setSelected(null)}
       >
-        <ambientLight intensity={0.5} color="#ffffff" />
+        <ambientLight intensity={0.75} color="#ffffff" />
         {/* Night fill — teal sky, dark ground */}
         <hemisphereLight args={['#65B3AE', '#0d1117', 0.18]} />
         <directionalLight
@@ -73,6 +75,8 @@ export default function App() {
 
         <Sky />
         <CityGrid wallets={wallets} onBuildingClick={setSelected} hideLabels={selected !== null} />
+        <Birds cx={84} cz={90} />
+        <Airplane cx={84} cz={90} />
 
         <OrbitControls
           makeDefault
