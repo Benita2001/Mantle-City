@@ -80,7 +80,8 @@ function normalizeWallets(rows, cols, rowCount) {
     const facadeColor = isProto
       ? FACADE_COLORS[0]
       : FACADE_COLORS[Math.floor(rnd() * FACADE_COLORS.length)]
-    return { row, addr, proto, type, height, size, litPct, seed, facadeColor }
+    return { row, addr, proto, type, height, size, litPct, seed, facadeColor,
+             txCount: row.tx_count || 0, volume: row.total_volume_mnt || 0 }
   }).sort((a, b) => b.height - a.height)
 
   // Grid positions sorted closest-to-center first
@@ -108,6 +109,8 @@ function normalizeWallets(rows, cols, rowCount) {
       subtitle:    n.proto ? n.proto.subtitle : null,
       type:        n.type,
       address:     n.row.wallet_address,
+      txCount:     n.txCount,
+      volume:      n.volume,
     }
   })
 }
@@ -121,7 +124,7 @@ function genPlaceholderData(cols, rows) {
       const rnd  = mulberry32(seed)
       out.push({ id: `b_${c}_${r}`, seed, width: 3 + rnd() * 5, depth: 3 + rnd() * 5,
         height: 8 + rnd() * 32, facadeColor: FACADE_COLORS[Math.floor(rnd() * 3)],
-        litPct: 0.35, label: null })
+        litPct: 0.35, label: null, txCount: 0, volume: 0 })
     }
   }
   out.sort((a, b) => b.height - a.height)
@@ -282,35 +285,10 @@ function AnimatedCars({ nsX, ewZ, gridW, gridD }) {
   )
 }
 
-// ── Landmark label (floating above protocol buildings) ────────────────────────
-function LandmarkLabel({ label, subtitle, height }) {
-  return (
-    <Html
-      position={[0, height + 2.5, 0]}
-      center
-      style={{ pointerEvents: 'none', userSelect: 'none' }}
-    >
-      <div style={{
-        background:   'rgba(5,13,32,0.82)',
-        border:       '1px solid #65B3AE',
-        borderRadius: '4px',
-        padding:      '4px 8px',
-        color:        '#65B3AE',
-        fontFamily:   'monospace',
-        fontSize:     '11px',
-        lineHeight:   '1.4',
-        whiteSpace:   'nowrap',
-        textAlign:    'center',
-      }}>
-        <div style={{ fontWeight: 700 }}>{label}</div>
-        {subtitle && <div style={{ color: '#a0c4c2', fontSize: '10px' }}>{subtitle}</div>}
-      </div>
-    </Html>
-  )
-}
+// LandmarkLabel removed — labels now rendered at absolute world positions outside building groups
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export default function CityGrid({ wallets = null }) {
+export default function CityGrid({ wallets = null, onBuildingClick = null }) {
   const { cols, rows, gridW, gridD, nsX, ewZ } = useMemo(() => {
     const n = wallets ? wallets.length : 20
     return computeGrid(n)
@@ -359,10 +337,11 @@ export default function CityGrid({ wallets = null }) {
   return (
     <group>
 
-      {/* ── Ground plane ──────────────────────────────────────────────────── */}
+      {/* ── Ground plane (also dismisses popup on click) ──────────────── */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}
             position={[gridW / 2, 0, gridD / 2]}
-            receiveShadow>
+            receiveShadow
+            onClick={() => onBuildingClick?.(null)}>
         <planeGeometry args={[500, 500]} />
         <meshStandardMaterial color="#1a1a1a" roughness={0.95} metalness={0} />
       </mesh>
@@ -458,9 +437,13 @@ export default function CityGrid({ wallets = null }) {
         })
       )}
 
-      {/* ── Buildings ────────────────────────────────────────────────────── */}
+      {/* ── Buildings (clickable) ────────────────────────────────────────── */}
       {buildings.map(b => (
-        <group key={b.id} position={[b.x, 0, b.z]}>
+        <group
+          key={b.id}
+          position={[b.x, 0, b.z]}
+          onClick={(e) => { e.stopPropagation(); onBuildingClick?.(b) }}
+        >
           <Building
             width={b.width}
             depth={b.depth}
@@ -469,10 +452,33 @@ export default function CityGrid({ wallets = null }) {
             facadeColor={b.facadeColor}
             litPct={b.litPct}
           />
-          {b.label && (
-            <LandmarkLabel label={b.label} subtitle={b.subtitle} height={b.height} />
-          )}
         </group>
+      ))}
+
+      {/* ── Protocol landmark labels — absolute world positions to prevent overlap */}
+      {buildings.filter(b => b.label).map(b => (
+        <Html
+          key={`label-${b.id}`}
+          position={[b.x, b.height + 4, b.z]}
+          center
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          <div style={{
+            background:   'rgba(5,13,32,0.88)',
+            border:       '1px solid #65B3AE',
+            borderRadius: '4px',
+            padding:      '4px 10px',
+            color:        '#65B3AE',
+            fontFamily:   'monospace',
+            fontSize:     '11px',
+            lineHeight:   '1.4',
+            whiteSpace:   'nowrap',
+            textAlign:    'center',
+          }}>
+            <div style={{ fontWeight: 700 }}>{b.label}</div>
+            {b.subtitle && <div style={{ color: '#a0c4c2', fontSize: '10px' }}>{b.subtitle}</div>}
+          </div>
+        </Html>
       ))}
 
       {/* ── Street lights at all intersections (NW corner each) ─────────── */}

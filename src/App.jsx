@@ -1,9 +1,11 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
+import { useState } from 'react'
 import CityGrid from './CityGrid.jsx'
 import Sky      from './Sky.jsx'
 import { useDuneData } from './hooks/useDuneData.js'
+import { formatAddress, formatVolume } from './utils/walletClassifier.js'
 
 const spinnerStyle = `
   @keyframes _spin { to { transform: rotate(360deg); } }
@@ -11,6 +13,7 @@ const spinnerStyle = `
 
 export default function App() {
   const { wallets, loading } = useDuneData()
+  const [selected, setSelected] = useState(null)
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#050D20' }}>
@@ -49,6 +52,7 @@ export default function App() {
         onCreated={({ camera, scene }) => { camera.lookAt(54, 0, 66); scene.background = new THREE.Color('#050D20') }}
         gl={{ antialias: true, toneMapping: 4 /* ACESFilmic */ }}
         shadows
+        onPointerMissed={() => setSelected(null)}
       >
         <ambientLight intensity={0.5} color="#ffffff" />
         {/* Night fill — teal sky, dark ground */}
@@ -68,7 +72,7 @@ export default function App() {
         />
 
         <Sky />
-        <CityGrid wallets={wallets} />
+        <CityGrid wallets={wallets} onBuildingClick={setSelected} />
 
         <OrbitControls
           makeDefault
@@ -80,6 +84,66 @@ export default function App() {
           enableDamping={false}
         />
       </Canvas>
+
+      {/* ── Building popup card ─────────────────────────────────────────── */}
+      {selected && (
+        <div style={{
+          position:     'fixed',
+          bottom:       '24px',
+          left:         '24px',
+          background:   '#0d1117',
+          border:       '1px solid #65B3AE',
+          borderRadius: '8px',
+          padding:      '16px 20px',
+          color:        '#c9d1d9',
+          fontFamily:   'monospace',
+          fontSize:     '13px',
+          lineHeight:   '1.7',
+          zIndex:       1000,
+          minWidth:     '280px',
+          boxShadow:    '0 4px 32px rgba(0,0,0,0.8)',
+          pointerEvents: 'auto',
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+            <div>
+              <div style={{ color: '#65B3AE', fontWeight: 700, fontSize: '14px' }}>
+                {selected.label || formatAddress(selected.address)}
+              </div>
+              {selected.subtitle && (
+                <div style={{ color: '#4a9490', fontSize: '11px' }}>{selected.subtitle}</div>
+              )}
+            </div>
+            <button
+              onClick={() => setSelected(null)}
+              style={{ background: 'none', border: 'none', color: '#65B3AE', cursor: 'pointer', fontSize: '20px', lineHeight: 1, padding: '0 0 0 12px' }}
+            >×</button>
+          </div>
+          {/* Fields */}
+          <div><span style={{ color: '#6e7681' }}>Address  </span>{formatAddress(selected.address)}</div>
+          <div><span style={{ color: '#6e7681' }}>Txns     </span>{(selected.txCount || 0).toLocaleString()}</div>
+          <div style={{ marginBottom: '14px' }}><span style={{ color: '#6e7681' }}>Volume   </span>{formatVolume(selected.volume || 0)}</div>
+          {/* Explorer link */}
+          <a
+            href={`https://explorer.mantle.xyz/address/${selected.address}`}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display:        'block',
+              textAlign:      'center',
+              color:          '#65B3AE',
+              border:         '1px solid #65B3AE',
+              borderRadius:   '4px',
+              padding:        '6px 0',
+              textDecoration: 'none',
+              fontSize:       '12px',
+              letterSpacing:  '0.04em',
+            }}
+          >
+            View on Mantle Explorer →
+          </a>
+        </div>
+      )}
     </div>
   )
 }
