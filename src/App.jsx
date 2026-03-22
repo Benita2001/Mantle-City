@@ -72,7 +72,7 @@ export default function App() {
         />
 
         <Sky />
-        <CityGrid wallets={wallets} onBuildingClick={setSelected} />
+        <CityGrid wallets={wallets} onBuildingClick={setSelected} hideLabels={selected !== null} />
 
         <OrbitControls
           makeDefault

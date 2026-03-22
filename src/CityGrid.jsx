@@ -288,7 +288,7 @@ function AnimatedCars({ nsX, ewZ, gridW, gridD }) {
 // LandmarkLabel removed — labels now rendered at absolute world positions outside building groups
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export default function CityGrid({ wallets = null, onBuildingClick = null }) {
+export default function CityGrid({ wallets = null, onBuildingClick = null, hideLabels = false }) {
   const { cols, rows, gridW, gridD, nsX, ewZ } = useMemo(() => {
     const n = wallets ? wallets.length : 20
     return computeGrid(n)
@@ -455,8 +455,8 @@ export default function CityGrid({ wallets = null, onBuildingClick = null }) {
         </group>
       ))}
 
-      {/* ── Protocol landmark labels — absolute world positions to prevent overlap */}
-      {buildings.filter(b => b.label).map(b => (
+      {/* ── Protocol landmark labels — hidden when popup is open */}
+      {!hideLabels && buildings.filter(b => b.label).map(b => (
         <Html
           key={`label-${b.id}`}
           position={[b.x, b.height + 4, b.z]}
