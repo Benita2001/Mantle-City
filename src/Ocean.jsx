@@ -173,8 +173,8 @@ export default function Ocean({ gridW = 108 }) {
       <BeachUmbrella x={74}  z={-3.5} />
       <BeachUmbrella x={94}  z={-2.0} />
 
-      {/* Ocean plane — near edge at z = -5, extends 600 units south */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, -0.5, -305]}>
+      {/* Ocean plane — near edge at z = 0, slides under the beach, no gap */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, -0.5, -300]}>
         <planeGeometry args={[gridW + 700, 600, 1, 1]} />
         <shaderMaterial
           ref={matRef}
