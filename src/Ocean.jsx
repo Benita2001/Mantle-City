@@ -133,7 +133,7 @@ function DriftBoat({ initX, z, speed, dir, rotY }) {
   })
 
   return (
-    <group ref={ref} position={[initX, 0.35, z]} rotation={[0, rotY, 0]}>
+    <group ref={ref} position={[initX, -0.28, z]} rotation={[0, rotY, 0]}>
       {/* Hull */}
       <mesh material={boatMat}>
         <boxGeometry args={[1.1, 0.45, 2.8]} />
@@ -160,21 +160,21 @@ export default function Ocean({ gridW = 108 }) {
   return (
     <group>
 
-      {/* Sandy beach strip — z = 0 → z = -8, 8 units wide, warm golden sand */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, 0.05, -4]}>
-        <planeGeometry args={[gridW + 40, 8]} />
+      {/* Sandy beach strip — z = 0 → z = -5, 5 units wide, right at city edge */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, 0.05, -2.5]}>
+        <planeGeometry args={[gridW + 40, 5]} />
         <meshStandardMaterial color="#c4935a" roughness={0.95} metalness={0} />
       </mesh>
 
-      {/* Beach umbrellas — 5 along the strip */}
-      <BeachUmbrella x={12}  z={-3.5} />
-      <BeachUmbrella x={30}  z={-5.0} />
-      <BeachUmbrella x={52}  z={-3.5} />
-      <BeachUmbrella x={74}  z={-5.0} />
-      <BeachUmbrella x={94}  z={-3.5} />
+      {/* Beach umbrellas — within the 5-unit strip (z = 0 → z = -5) */}
+      <BeachUmbrella x={12}  z={-2.0} />
+      <BeachUmbrella x={30}  z={-3.5} />
+      <BeachUmbrella x={52}  z={-2.0} />
+      <BeachUmbrella x={74}  z={-3.5} />
+      <BeachUmbrella x={94}  z={-2.0} />
 
-      {/* Ocean plane — perfectly flat, shader handles all animation */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, -0.5, -304]}>
+      {/* Ocean plane — near edge at z = -5, extends 600 units south */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, -0.5, -305]}>
         <planeGeometry args={[gridW + 700, 600, 1, 1]} />
         <shaderMaterial
           ref={matRef}
@@ -184,10 +184,10 @@ export default function Ocean({ gridW = 108 }) {
         />
       </mesh>
 
-      {/* Boat silhouettes — three slow drifters */}
-      <DriftBoat initX={55}  z={-32}  speed={0.28} dir={ 1} rotY={ Math.PI / 2} />
-      <DriftBoat initX={100} z={-75}  speed={0.18} dir={-1} rotY={-Math.PI / 2} />
-      <DriftBoat initX={35}  z={-180} speed={0.12} dir={ 1} rotY={ Math.PI / 2} />
+      {/* Boat silhouettes — sit on ocean surface (y = -0.5 + hull) */}
+      <DriftBoat initX={55}  z={-20}  speed={0.28} dir={ 1} rotY={ Math.PI / 2} />
+      <DriftBoat initX={100} z={-55}  speed={0.18} dir={-1} rotY={-Math.PI / 2} />
+      <DriftBoat initX={35}  z={-140} speed={0.12} dir={ 1} rotY={ Math.PI / 2} />
 
     </group>
   )
