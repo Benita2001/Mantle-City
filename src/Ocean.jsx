@@ -96,7 +96,7 @@ const chairMat  = new THREE.MeshStandardMaterial({ color: '#7a4e24', roughness: 
 // ── Beach umbrella: cone canopy + pole + two loungers + warm point light ──────
 function BeachUmbrella({ x, z }) {
   return (
-    <group position={[x, 0.05, z]}>
+    <group position={[x, 0.03, z]}>
       {/* Pole */}
       <mesh material={poleMat} position={[0, 1.1, 0]}>
         <cylinderGeometry args={[0.06, 0.06, 2.2, 6]} />
@@ -161,7 +161,7 @@ export default function Ocean({ gridW = 108 }) {
     <group>
 
       {/* Sandy beach strip — z = 0 → z = -5, 5 units wide, right at city edge */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, 0.05, -2.5]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, 0.03, -2.5]}>
         <planeGeometry args={[gridW + 40, 5]} />
         <meshStandardMaterial color="#c4935a" roughness={0.95} metalness={0} />
       </mesh>
@@ -173,8 +173,8 @@ export default function Ocean({ gridW = 108 }) {
       <BeachUmbrella x={74}  z={-3.5} />
       <BeachUmbrella x={94}  z={-2.0} />
 
-      {/* Ocean plane — near edge at z = 0, slides under the beach, no gap */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, -0.5, -300]}>
+      {/* Ocean plane — near edge at z = 0, y=0.02 just above ground */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[CX, 0.02, -300]}>
         <planeGeometry args={[gridW + 700, 600, 1, 1]} />
         <shaderMaterial
           ref={matRef}
