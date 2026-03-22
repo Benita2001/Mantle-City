@@ -122,20 +122,20 @@ export default function Ocean() {
   return (
     <group>
 
-      {/* Beach strip — 600×10, y=0.03, right at city back edge z≈-100 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, -105]}>
-        <planeGeometry args={[600, 10]} />
+      {/* Beach — fills entire gap: city south edge (z=0) → ground end (z=-160) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, -80]}>
+        <planeGeometry args={[600, 160]} />
         <meshStandardMaterial color="#c4935a" roughness={0.95} metalness={0} />
       </mesh>
 
-      {/* Umbrellas along the beach strip */}
-      <Umbrella x={-120} z={-105} />
-      <Umbrella x={  -30} z={-107} />
-      <Umbrella x={   60} z={-105} />
-      <Umbrella x={  150} z={-107} />
+      {/* Umbrellas near the shoreline (where beach meets ocean at z≈-150) */}
+      <Umbrella x={-100} z={-140} />
+      <Umbrella x={  10} z={-145} />
+      <Umbrella x={ 120} z={-140} />
+      <Umbrella x={ 220} z={-145} />
 
-      {/* Ocean plane — 600×300, y=0.02, behind city only (z=-60 to z=-360) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -210]}>
+      {/* Ocean — starts at z=-160 where ground ends, extends to z=-460. No ground overlap. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -310]}>
         <planeGeometry args={[600, 300, 1, 1]} />
         <shaderMaterial
           ref={matRef}
@@ -145,10 +145,10 @@ export default function Ocean() {
         />
       </mesh>
 
-      {/* Boats on the ocean */}
-      <Boat x={  50} z={-150} speed={0.25} dir={ 1} />
-      <Boat x={ -20} z={-220} speed={0.18} dir={-1} />
-      <Boat x={ 120} z={-300} speed={0.14} dir={ 1} />
+      {/* Boats — in the ocean past z=-160 */}
+      <Boat x={  50} z={-210} speed={0.25} dir={ 1} />
+      <Boat x={ -20} z={-300} speed={0.18} dir={-1} />
+      <Boat x={ 150} z={-390} speed={0.14} dir={ 1} />
 
     </group>
   )
