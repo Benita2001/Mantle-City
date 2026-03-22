@@ -85,25 +85,32 @@ export default function App() {
         />
       </Canvas>
 
-      {/* ── Building popup card ─────────────────────────────────────────── */}
+      {/* ── Building popup modal ────────────────────────────────────────── */}
       {selected && (
-        <div style={{
-          position:     'fixed',
-          bottom:       '24px',
-          left:         '24px',
-          background:   '#0d1117',
-          border:       '1px solid #65B3AE',
-          borderRadius: '8px',
-          padding:      '16px 20px',
-          color:        '#c9d1d9',
-          fontFamily:   'monospace',
-          fontSize:     '13px',
-          lineHeight:   '1.7',
-          zIndex:       1000,
-          minWidth:     '280px',
-          boxShadow:    '0 4px 32px rgba(0,0,0,0.8)',
-          pointerEvents: 'auto',
-        }}>
+        <>
+          {/* Dim overlay — click to dismiss */}
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 999 }}
+            onClick={() => setSelected(null)}
+          />
+          <div style={{
+            position:      'fixed',
+            top:           '50%',
+            left:          '50%',
+            transform:     'translate(-50%, -50%)',
+            background:    '#0d1117',
+            border:        '1px solid #65B3AE',
+            borderRadius:  '10px',
+            padding:       '24px 28px',
+            color:         '#c9d1d9',
+            fontFamily:    'monospace',
+            fontSize:      '13px',
+            lineHeight:    '1.8',
+            zIndex:        1000,
+            minWidth:      '320px',
+            boxShadow:     '0 8px 48px rgba(0,0,0,0.9)',
+            pointerEvents: 'auto',
+          }}>
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
             <div>
@@ -143,6 +150,7 @@ export default function App() {
             View on Mantle Explorer →
           </a>
         </div>
+        </>
       )}
     </div>
   )

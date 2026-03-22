@@ -44,10 +44,10 @@ export function formatAddress(addr) {
 }
 
 export function formatVolume(vol) {
-  if (vol == null) return '0 MNT'
-  if (vol >= 1_000_000) return (vol / 1_000_000).toFixed(2) + 'M MNT'
-  if (vol >=     1_000) return (vol /     1_000).toFixed(1) + 'K MNT'
-  return vol.toFixed(2) + ' MNT'
+  if (vol == null || vol === 0) return '0 MNT'
+  const rounded = Math.round(vol)
+  if (rounded === 0) return vol.toFixed(4) + ' MNT'   // sub-cent amounts
+  return rounded.toLocaleString('en-US') + ' MNT'
 }
 
 export function formatDate(dateStr) {
