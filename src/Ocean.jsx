@@ -122,21 +122,21 @@ export default function Ocean() {
   return (
     <group>
 
-      {/* Beach strip — 600×10, y=0.03, centered at z=-55 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, -55]}>
+      {/* Beach strip — 600×10, y=0.03, right at city back edge z≈-100 */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, -105]}>
         <planeGeometry args={[600, 10]} />
         <meshStandardMaterial color="#c4935a" roughness={0.95} metalness={0} />
       </mesh>
 
       {/* Umbrellas along the beach strip */}
-      <Umbrella x={-120} z={-55} />
-      <Umbrella x={  -30} z={-57} />
-      <Umbrella x={   60} z={-55} />
-      <Umbrella x={  150} z={-57} />
+      <Umbrella x={-120} z={-105} />
+      <Umbrella x={  -30} z={-107} />
+      <Umbrella x={   60} z={-105} />
+      <Umbrella x={  150} z={-107} />
 
-      {/* Ocean plane — 600×600, y=0.02, centered at z=-160 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -160]}>
-        <planeGeometry args={[600, 600, 1, 1]} />
+      {/* Ocean plane — 600×300, y=0.02, behind city only (z=-60 to z=-360) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -210]}>
+        <planeGeometry args={[600, 300, 1, 1]} />
         <shaderMaterial
           ref={matRef}
           vertexShader={VERT}
@@ -146,9 +146,9 @@ export default function Ocean() {
       </mesh>
 
       {/* Boats on the ocean */}
-      <Boat x={  50} z={ -90} speed={0.25} dir={ 1} />
-      <Boat x={ -20} z={-140} speed={0.18} dir={-1} />
-      <Boat x={ 120} z={-210} speed={0.14} dir={ 1} />
+      <Boat x={  50} z={-150} speed={0.25} dir={ 1} />
+      <Boat x={ -20} z={-220} speed={0.18} dir={-1} />
+      <Boat x={ 120} z={-300} speed={0.14} dir={ 1} />
 
     </group>
   )
