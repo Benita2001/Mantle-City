@@ -1,4 +1,5 @@
 export const PROTOCOL_ADDRESSES = {
+  '0x78605df79524164911c144801f41e9811b7db73d': { name: 'Mantle Treasury', subtitle: 'Treasury'       },
   '0x765cd3c8ab7f872b4ddcaeefd32714d5a13bcc65': { name: 'Agni Finance',    subtitle: 'DEX Protocol'  },
   '0x4515a45337f461a11ff0fe8abf3c606ae5dc00c9': { name: 'Merchant Moe',    subtitle: 'DEX Protocol'  },
   '0x25356aeca4210ef7553140edb9b8026089e49396': { name: 'Lendle Protocol', subtitle: 'Lending'       },
