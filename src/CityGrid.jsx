@@ -342,7 +342,7 @@ export default function CityGrid({ wallets = null, onBuildingClick = null, hideL
             position={[gridW / 2, 0, gridD / 2]}
             receiveShadow
             onClick={() => onBuildingClick?.(null)}>
-        <planeGeometry args={[500, 500]} />
+        <planeGeometry args={[2000, 2000]} />
         <meshStandardMaterial color="#1a1a1a" roughness={0.95} metalness={0} />
       </mesh>
 
