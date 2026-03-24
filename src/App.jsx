@@ -50,8 +50,8 @@ export default function App() {
       )}
 
       <Canvas
-        camera={{ position: [54, 70, 160], fov: 50 }}
-        onCreated={({ camera, scene }) => { camera.lookAt(54, 0, 66); scene.background = new THREE.Color('#050D20') }}
+        camera={{ position: [84, 170, 310], fov: 50 }}
+        onCreated={({ camera, scene }) => { camera.lookAt(84, 0, 120); scene.background = new THREE.Color('#050D20') }}
         gl={{ antialias: true, toneMapping: 4 /* ACESFilmic */ }}
         shadows
         onPointerMissed={() => setSelected(null)}
@@ -69,7 +69,7 @@ export default function App() {
           shadow-camera-far={600}
           shadow-camera-left={-30}
           shadow-camera-right={240}
-          shadow-camera-top={280}
+          shadow-camera-top={380}
           shadow-camera-bottom={-40}
         />
 
@@ -80,11 +80,11 @@ export default function App() {
 
         <OrbitControls
           makeDefault
-          target={[54, 0, 66]}
+          target={[84, 0, 120]}
           minPolarAngle={0}
           maxPolarAngle={Math.PI / 2 - 0.05}
           minDistance={10}
-          maxDistance={150}
+          maxDistance={380}
           enableDamping={false}
         />
       </Canvas>

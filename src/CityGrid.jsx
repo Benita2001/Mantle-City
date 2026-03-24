@@ -5,7 +5,6 @@ import * as THREE from 'three'
 import Building    from './Building.jsx'
 import StreetLight from './StreetLight.jsx'
 import CityFlag    from './CityFlag.jsx'
-import Ocean       from './Ocean.jsx'
 import { getProtocolInfo, classifyWallet, WALLET_COLORS } from './utils/walletClassifier.js'
 
 // ── Grid constants ─────────────────────────────────────────────────────────────
@@ -503,8 +502,6 @@ export default function CityGrid({ wallets = null, onBuildingClick = null, hideL
         />
       )}
 
-      {/* ── Ocean along the city's -Z waterfront edge ────────────────────── */}
-      <Ocean gridW={gridW} />
 
     </group>
   )
