@@ -17,13 +17,13 @@ export default function StreetLight({ position = [0, 0, 0] }) {
         <meshStandardMaterial color="#252530" roughness={0.7} metalness={0.5} />
       </mesh>
 
-      {/* Lamp housing — flat disc, teal emissive */}
+      {/* Lamp housing — flat disc, warm golden-orange */}
       <mesh position={[0.45, POLE_H + 0.01, 0]}>
         <cylinderGeometry args={[0.12, 0.12, 0.06, 8]} />
         <meshStandardMaterial
-          color="#65B3AE"
-          emissive="#65B3AE"
-          emissiveIntensity={1.8}
+          color="#ffaa30"
+          emissive="#ffaa30"
+          emissiveIntensity={2.0}
           roughness={0.3}
           metalness={0.2}
         />

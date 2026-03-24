@@ -51,18 +51,18 @@ export default function App() {
 
       <Canvas
         camera={{ position: [84, 170, 310], fov: 50 }}
-        onCreated={({ camera, scene }) => { camera.lookAt(84, 0, 120); scene.background = new THREE.Color('#050D20') }}
+        onCreated={({ camera, scene }) => { camera.lookAt(84, 0, 120); scene.background = new THREE.Color('#0a1640') }}
         gl={{ antialias: true, toneMapping: 4 /* ACESFilmic */ }}
         shadows
         onPointerMissed={() => setSelected(null)}
       >
-        <ambientLight intensity={0.75} color="#ffffff" />
-        {/* Night fill — teal sky, dark ground */}
-        <hemisphereLight args={['#65B3AE', '#0d1117', 0.18]} />
+        <ambientLight intensity={0.58} color="#c8d8f0" />
+        {/* Night fill — deep blue sky, dark ground */}
+        <hemisphereLight args={['#1a4a90', '#090e18', 0.22]} />
         <directionalLight
           position={[30, 60, 40]}
-          intensity={0.8}
-          color="#d0e0ff"
+          intensity={0.65}
+          color="#b8c8e8"
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-camera-near={1}
