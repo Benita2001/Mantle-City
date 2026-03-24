@@ -80,9 +80,6 @@ export default function Sky() {
 
   return (
     <>
-      {/* Blue atmospheric haze — color matches horizon so distant buildings fade naturally */}
-      <fogExp2 attach="fog" args={['#2a68a8', 0.007]} />
-
       {/* Sky gradient dome — fog:false so sphere isn't fogged out */}
       <mesh position={[CX, 0, CZ]} renderOrder={-1}>
         <sphereGeometry args={[SKY_R, 32, 16]} />
@@ -99,9 +96,9 @@ export default function Sky() {
         <pointsMaterial
           vertexColors
           sizeAttenuation={false}
-          size={1.6}
+          size={2.2}
           transparent
-          opacity={0.90}
+          opacity={1.0}
           fog={false}
           depthWrite={false}
         />
@@ -112,9 +109,9 @@ export default function Sky() {
         <pointsMaterial
           vertexColors
           sizeAttenuation={false}
-          size={3.2}
+          size={4.5}
           transparent
-          opacity={0.96}
+          opacity={1.0}
           fog={false}
           depthWrite={false}
         />
