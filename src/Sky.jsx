@@ -80,6 +80,9 @@ export default function Sky() {
 
   return (
     <>
+      {/* Very subtle far-distance fade — invisible up close, softens ground edges */}
+      <fogExp2 attach="fog" args={['#0a0a1a', 0.002]} />
+
       {/* Sky gradient dome — fog:false so sphere isn't fogged out */}
       <mesh position={[CX, 0, CZ]} renderOrder={-1}>
         <sphereGeometry args={[SKY_R, 32, 16]} />
