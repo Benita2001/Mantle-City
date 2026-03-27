@@ -1,13 +1,34 @@
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import CityGrid  from './CityGrid.jsx'
 import Sky       from './Sky.jsx'
 import Birds     from './Birds.jsx'
 import Airplane  from './Airplane.jsx'
 import { useDuneData } from './hooks/useDuneData.js'
 import { formatAddress, formatVolume } from './utils/walletClassifier.js'
+
+// ── Slow auto-orbit — pauses on interaction, resumes after 3 s ───────────────
+function CameraDrift() {
+  const { controls } = useThree()
+  const lastInteract = useRef(0)   // 0 → drift starts immediately on load
+
+  useEffect(() => {
+    if (!controls) return
+    controls.autoRotateSpeed = 1.0  // 2π rad in 60 s = one full revolution/min
+    const onStart = () => { lastInteract.current = Date.now() }
+    controls.addEventListener('start', onStart)
+    return () => controls.removeEventListener('start', onStart)
+  }, [controls])
+
+  useFrame(() => {
+    if (!controls) return
+    controls.autoRotate = Date.now() - lastInteract.current > 3000
+  })
+
+  return null
+}
 
 const spinnerStyle = `
   @keyframes _spin { to { transform: rotate(360deg); } }
@@ -73,6 +94,7 @@ export default function App() {
           shadow-camera-bottom={-40}
         />
 
+        <CameraDrift />
         <Sky />
         <CityGrid wallets={wallets} onBuildingClick={setSelected} hideLabels={selected !== null} />
         <Birds cx={84} cz={90} />
