@@ -23,7 +23,7 @@ export default function LoadingScreen({ loading }) {
   useEffect(() => {
     const id = setInterval(() => {
       setProgress(p => {
-        if (loading) return Math.min(p + 1.1, 85)
+        if (loading) return Math.min(p + 0.9, 85)
         const next = Math.min(p + 5, 100)
         if (next >= 100) clearInterval(id)
         return next
