@@ -72,7 +72,7 @@ export default function App() {
 
       <Canvas
         camera={{ position: [84, 170, 310], fov: 50 }}
-        onCreated={({ camera, scene }) => { camera.lookAt(84, 0, 120); scene.background = new THREE.Color('#050d2e') }}
+        onCreated={({ camera, scene }) => { camera.lookAt(84, 0, 120); scene.background = new THREE.Color('#050D20') }}
         gl={{ antialias: true, toneMapping: 4 /* ACESFilmic */ }}
         shadows
         onPointerMissed={() => setSelected(null)}
