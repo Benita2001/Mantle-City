@@ -12,12 +12,8 @@ function makeSkyGradient() {
   c.width = 2; c.height = 512
   const ctx = c.getContext('2d')
   const g = ctx.createLinearGradient(0, 0, 0, 512)
-  g.addColorStop(0.00, '#0a1640')  // zenith — deep navy
-  g.addColorStop(0.28, '#0c2258')  // upper sky
-  g.addColorStop(0.56, '#163c78')  // mid sky — royal blue
-  g.addColorStop(0.76, '#2468a8')  // near horizon
-  g.addColorStop(0.91, '#3a7fc4')  // horizon glow
-  g.addColorStop(1.00, '#4898d0')  // very bottom
+  g.addColorStop(0.00, '#030d1f')  // zenith — very dark
+  g.addColorStop(1.00, '#162d5a')  // horizon — dark but clearly blue
   ctx.fillStyle = g
   ctx.fillRect(0, 0, 2, 512)
   const tex = new THREE.CanvasTexture(c)
