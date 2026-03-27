@@ -343,7 +343,7 @@ export default function CityGrid({ wallets = null, onBuildingClick = null, hideL
             receiveShadow
             onClick={() => onBuildingClick?.(null)}>
         <planeGeometry args={[2000, 2000]} />
-        <meshStandardMaterial color="#1a1a2e" roughness={0.95} metalness={0} />
+        <meshStandardMaterial color="#2a2a35" roughness={0.95} metalness={0} />
       </mesh>
 
       {/* ── Sidewalks: narrow pavement strip on each side of every road ────── */}
