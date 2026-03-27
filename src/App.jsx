@@ -8,6 +8,7 @@ import Birds     from './Birds.jsx'
 import Airplane  from './Airplane.jsx'
 import { useDuneData } from './hooks/useDuneData.js'
 import { formatAddress, formatVolume } from './utils/walletClassifier.js'
+import LoadingScreen from './LoadingScreen.jsx'
 
 // ── Slow auto-orbit — pauses on interaction, resumes after 3 s ───────────────
 function CameraDrift() {
@@ -30,45 +31,13 @@ function CameraDrift() {
   return null
 }
 
-const spinnerStyle = `
-  @keyframes _spin { to { transform: rotate(360deg); } }
-`
-
 export default function App() {
   const { wallets, loading } = useDuneData()
   const [selected, setSelected] = useState(null)
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#050D20' }}>
-      <style>{spinnerStyle}</style>
-
-      {loading && (
-        <div style={{
-          position:       'absolute',
-          inset:          0,
-          display:        'flex',
-          flexDirection:  'column',
-          alignItems:     'center',
-          justifyContent: 'center',
-          zIndex:         10,
-          background:     'rgba(0,0,8,0.85)',
-          color:          '#65B3AE',
-          fontFamily:     'monospace',
-          gap:            '16px',
-        }}>
-          <div style={{
-            width:           '40px',
-            height:          '40px',
-            border:          '3px solid #0d2030',
-            borderTop:       '3px solid #65B3AE',
-            borderRadius:    '50%',
-            animation:       '_spin 0.9s linear infinite',
-          }} />
-          <div style={{ fontSize: '13px', letterSpacing: '0.08em' }}>
-            Loading Mantle City...
-          </div>
-        </div>
-      )}
+      <LoadingScreen loading={loading} />
 
       <Canvas
         camera={{ position: [84, 170, 310], fov: 50 }}
