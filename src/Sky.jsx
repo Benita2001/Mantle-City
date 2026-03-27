@@ -12,12 +12,10 @@ function makeSkyGradient() {
   c.width = 2; c.height = 512
   const ctx = c.getContext('2d')
   const g = ctx.createLinearGradient(0, 0, 0, 512)
-  g.addColorStop(0.00, '#0a1640')  // zenith — deep navy
-  g.addColorStop(0.28, '#0c2258')  // upper sky
-  g.addColorStop(0.56, '#163c78')  // mid sky — royal blue
-  g.addColorStop(0.76, '#2468a8')  // near horizon
-  g.addColorStop(0.91, '#3a7fc4')  // horizon glow
-  g.addColorStop(1.00, '#4898d0')  // very bottom
+  g.addColorStop(0.00, '#050D20')  // zenith — deep dark navy
+  g.addColorStop(0.50, '#050D20')  // mid sky — same dark navy
+  g.addColorStop(0.82, '#071228')  // near horizon — very slightly lighter
+  g.addColorStop(1.00, '#0a1830')  // horizon — barely lifted so ground blends
   ctx.fillStyle = g
   ctx.fillRect(0, 0, 2, 512)
   const tex = new THREE.CanvasTexture(c)
@@ -81,7 +79,7 @@ export default function Sky() {
   return (
     <>
       {/* Very subtle far-distance fade — invisible up close, softens ground edges */}
-      <fogExp2 attach="fog" args={['#050d2e', 0.002]} />
+      <fogExp2 attach="fog" args={['#050D20', 0.002]} />
 
       {/* Sky gradient dome — fog:false so sphere isn't fogged out */}
       <mesh position={[CX, 0, CZ]} renderOrder={-1}>
