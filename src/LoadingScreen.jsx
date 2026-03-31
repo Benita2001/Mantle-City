@@ -1,18 +1,32 @@
 import { useState, useEffect } from 'react'
 
 const TEAL = '#65B3AE'
-const BG   = '#050d2e'
+const BG   = '#0c1a1a'
 
-// City silhouette — [x, width, height] in 1280×200 viewBox
-const BUILDINGS = [
-  [0,40,55],[45,25,80],[75,55,45],[135,20,105],[160,35,65],
-  [200,30,130],[235,25,75],[265,50,55],[320,18,95],[343,40,50],
-  [390,28,145],[423,22,70],[450,45,85],[500,38,115],[543,28,60],
-  [576,22,140],[603,42,52],[650,32,80],[687,48,95],[740,22,65],
-  [768,38,125],[812,28,58],[845,50,70],[900,20,105],[926,38,48],
-  [969,32,85],[1006,42,115],[1053,28,65],[1086,48,80],
-  [1140,25,100],[1170,38,60],[1213,42,75],[1260,20,50],
-]
+// Mantle spoke-wheel logo — 20 alternating long/short spokes
+function MantleLogo() {
+  const spokes = Array.from({ length: 20 }, (_, i) => {
+    const angle = (i / 20) * 360
+    const oR    = i % 2 === 0 ? 36 : 28
+    const iR    = i % 2 === 0 ? 14 : 18
+    return (
+      <rect
+        key={i}
+        x={38} y={40 - oR}
+        width={4} height={oR - iR}
+        rx={1.5}
+        fill={TEAL}
+        transform={`rotate(${angle} 40 40)`}
+      />
+    )
+  })
+  return (
+    <svg viewBox="0 0 80 80" width="80" height="80"
+         style={{ animation: 'mantleSpin 3s linear infinite', display: 'block' }}>
+      {spokes}
+    </svg>
+  )
+}
 
 export default function LoadingScreen({ loading }) {
   const [progress, setProgress] = useState(0)
@@ -59,6 +73,18 @@ export default function LoadingScreen({ loading }) {
       userSelect:     'none',
     }}>
 
+      <style>{`
+        @keyframes mantleSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+      `}</style>
+
+      {/* ── Spinning Mantle logo ─────────────────────────── */}
+      <div style={{ marginBottom: '28px' }}>
+        <MantleLogo />
+      </div>
+
       {/* ── Title ───────────────────────────────────────── */}
       <div style={{
         fontSize:      '38px',
@@ -100,7 +126,7 @@ export default function LoadingScreen({ loading }) {
       {/* ── Tagline ──────────────────────────────────────── */}
       <div style={{
         position:      'absolute',
-        bottom:        '130px',
+        bottom:        '40px',
         color:         TEAL,
         opacity:       0.42,
         fontSize:      '10px',
@@ -112,17 +138,6 @@ export default function LoadingScreen({ loading }) {
       }}>
         CLICK ANY BUILDING TO SEE THE TOP 500 WALLETS ON THE MANTLE BLOCKCHAIN
       </div>
-
-      {/* ── City silhouette ──────────────────────────────── */}
-      <svg
-        viewBox="0 0 1280 200"
-        preserveAspectRatio="xMidYMax slice"
-        style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '200px' }}
-      >
-        {BUILDINGS.map(([x, w, h], i) => (
-          <rect key={i} x={x} y={200 - h} width={w} height={h} fill="#0c1e42" />
-        ))}
-      </svg>
 
     </div>
   )

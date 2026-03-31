@@ -1,13 +1,13 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import CityGrid  from './CityGrid.jsx'
 import Sky       from './Sky.jsx'
 import Birds     from './Birds.jsx'
 import Airplane  from './Airplane.jsx'
 import { useDuneData } from './hooks/useDuneData.js'
-import { formatAddress, formatVolume } from './utils/walletClassifier.js'
+import { formatAddress } from './utils/walletClassifier.js'
 import LoadingScreen from './LoadingScreen.jsx'
 
 // ── Slow auto-orbit — pauses on interaction, resumes after 3 s ───────────────
@@ -17,7 +17,7 @@ function CameraDrift() {
 
   useEffect(() => {
     if (!controls) return
-    controls.autoRotateSpeed = 1.0  // 2π rad in 60 s = one full revolution/min
+    controls.autoRotateSpeed = 0.3
     const onStart = () => { lastInteract.current = Date.now() }
     controls.addEventListener('start', onStart)
     return () => controls.removeEventListener('start', onStart)
@@ -34,14 +34,92 @@ function CameraDrift() {
 export default function App() {
   const { wallets, loading } = useDuneData()
   const [selected, setSelected] = useState(null)
+  const stats = useMemo(() => {
+    const totalWallets = wallets?.length || 0
+    const totalTxCount = (wallets || []).reduce((sum, wallet) => sum + (wallet.tx_count || 0), 0)
+    return { totalWallets, totalTxCount }
+  }, [wallets])
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#050D20' }}>
       <LoadingScreen loading={loading} />
 
+      <div style={{
+        position: 'fixed',
+        top: '18px',
+        right: '18px',
+        zIndex: 900,
+        display: 'grid',
+        gap: '10px',
+        pointerEvents: 'none',
+      }}>
+        <div style={{
+          minWidth: '150px',
+          padding: '10px 14px',
+          background: 'rgba(8, 16, 28, 0.82)',
+          border: '1px solid rgba(101, 179, 174, 0.42)',
+          borderRadius: '8px',
+          boxShadow: '0 0 18px rgba(101, 179, 174, 0.10)',
+          backdropFilter: 'blur(8px)',
+          color: '#c9d1d9',
+          fontFamily: "'Share Tech Mono', 'Courier New', monospace",
+        }}>
+          <div style={{ fontSize: '10px', letterSpacing: '0.14em', color: '#65B3AE', marginBottom: '4px' }}>
+            TOTAL WALLETS
+          </div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>
+            {stats.totalWallets.toLocaleString()}
+          </div>
+        </div>
+
+        <div style={{
+          minWidth: '170px',
+          padding: '10px 14px',
+          background: 'rgba(8, 16, 28, 0.82)',
+          border: '1px solid rgba(101, 179, 174, 0.42)',
+          borderRadius: '8px',
+          boxShadow: '0 0 18px rgba(101, 179, 174, 0.10)',
+          backdropFilter: 'blur(8px)',
+          color: '#c9d1d9',
+          fontFamily: "'Share Tech Mono', 'Courier New', monospace",
+        }}>
+          <div style={{ fontSize: '10px', letterSpacing: '0.14em', color: '#65B3AE', marginBottom: '4px' }}>
+            TOTAL TX COUNT
+          </div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>
+            {stats.totalTxCount.toLocaleString()}
+          </div>
+        </div>
+      </div>
+
+      <a
+        href="https://x.com/0x_beni_"
+        target="_blank"
+        rel="noreferrer"
+        style={{
+          position: 'fixed',
+          left: '18px',
+          bottom: '18px',
+          zIndex: 900,
+          padding: '8px 12px',
+          background: 'rgba(8, 16, 28, 0.78)',
+          border: '1px solid rgba(101, 179, 174, 0.34)',
+          borderRadius: '999px',
+          boxShadow: '0 0 14px rgba(101, 179, 174, 0.08)',
+          backdropFilter: 'blur(8px)',
+          color: '#65B3AE',
+          fontFamily: "'Share Tech Mono', 'Courier New', monospace",
+          fontSize: '11px',
+          letterSpacing: '0.08em',
+          textDecoration: 'none',
+        }}
+      >
+        by Benita
+      </a>
+
       <Canvas
-        camera={{ position: [84, 170, 310], fov: 50 }}
-        onCreated={({ camera, scene }) => { camera.lookAt(84, 0, 120); scene.background = new THREE.Color('#0d1b3e') }}
+        camera={{ position: [0, 80, 250], fov: 50 }}
+        onCreated={({ camera, scene }) => { camera.lookAt(0, 0, 0); scene.background = new THREE.Color('#0d1b3e') }}
         gl={{ antialias: true, toneMapping: 4 /* ACESFilmic */ }}
         shadows
         onPointerMissed={() => setSelected(null)}
@@ -75,8 +153,11 @@ export default function App() {
           minPolarAngle={0}
           maxPolarAngle={Math.PI / 2 - 0.05}
           minDistance={10}
-          maxDistance={380}
-          enableDamping={false}
+          maxDistance={300}
+          enableDamping
+          dampingFactor={0.05}
+          autoRotate
+          autoRotateSpeed={0.3}
         />
       </Canvas>
 
@@ -123,8 +204,7 @@ export default function App() {
           </div>
           {/* Fields */}
           <div><span style={{ color: '#6e7681' }}>Address  </span>{formatAddress(selected.address)}</div>
-          <div><span style={{ color: '#6e7681' }}>Txns     </span>{(selected.txCount || 0).toLocaleString()}</div>
-          <div style={{ marginBottom: '14px' }}><span style={{ color: '#6e7681' }}>Volume   </span>{formatVolume(selected.volume || 0)}</div>
+          <div style={{ marginBottom: '14px' }}><span style={{ color: '#6e7681' }}>Txns     </span>{(selected.txCount || 0).toLocaleString()}</div>
           {/* Explorer link */}
           <a
             href={`https://explorer.mantle.xyz/address/${selected.address}`}
